@@ -23,6 +23,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout
@@ -101,11 +103,20 @@ jobs:
         openwrt_size: 192/320
         builder_name: nantayo
 
+    - name: Upload firmware artifact
+      if: env.PACKAGED_STATUS == 'success'
+      uses: actions/upload-artifact@v4
+      with:
+        name: openwrt-n1-${{ env.FILE_DATE }}
+        path: ${{ env.PACKAGED_OUTPUTPATH }}/*.img.*
+        retention-days: 7
+
     - name: Upload firmware to release
       uses: softprops/action-gh-release@master
+      if: env.PACKAGED_STATUS == 'success'
       with:
         tag_name: OpenWrt_${{ env.FILE_DATE }}
-        files: ${{ env.PACKAGED_OUTPUTPATH }}/*.img.xz
+        files: ${{ env.PACKAGED_OUTPUTPATH }}/*.img.*
         body: |
           首次使用建议全新刷写
           * 基本信息
